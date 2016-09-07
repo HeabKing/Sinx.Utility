@@ -1,5 +1,4 @@
 ﻿// ReSharper disable once CheckNamespace
-
 namespace System.IO
 {
     public static class FileStreamEx
@@ -24,6 +23,7 @@ namespace System.IO
         /// <returns></returns>
         public static string Save(this FileStream stream, FileType type, string pathDst)
         {
+            pathDst = Path.GetFullPath(pathDst);
             SaveType saveType = GetSaveType(pathDst);
             switch (type)
             {
@@ -37,7 +37,11 @@ namespace System.IO
                 default:
                     throw new Exception("暂不支持的文件类型");
             }
-            return Path.GetFullPath(pathDst);
+            // 去除评估版dll声明
+            var html = File.ReadAllText(pathDst);
+            html = Text.RegularExpressions.Regex.Replace(html, "(Evaluation Only\\. Created with Aspose\\.(.+?)\\. Copyright \\d+-\\d+ Aspose Pty Ltd\\.)|(This document was truncated here because it was created in the Evaluation Mode\\.)", "");
+            File.WriteAllText(pathDst, html);
+            return pathDst;
         }
 
         private enum SaveType
