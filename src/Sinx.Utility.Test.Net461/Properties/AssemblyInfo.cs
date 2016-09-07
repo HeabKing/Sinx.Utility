@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Sinx.Utility")]
+[assembly: AssemblyProduct("Sinx.Utility.Test.Net461")]
 [assembly: AssemblyTrademark("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
@@ -16,4 +16,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("b66e89cf-1630-4292-9b10-0bf07aa4d875")]
+[assembly: Guid("c60a71d5-85cc-463f-9f2b-838c7e41f36e")]
