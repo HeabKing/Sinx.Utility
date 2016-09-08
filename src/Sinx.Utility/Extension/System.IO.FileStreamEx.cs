@@ -1,12 +1,16 @@
-﻿// ReSharper disable once CheckNamespace
+﻿using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+// ReSharper disable once CheckNamespace
 namespace System.IO
 {
     public static class FileStreamEx
     {
-#if NET45
-/// <summary>
-/// 来源文件的类型
-/// </summary>
+        /// <summary>
+        /// 来源文件的类型
+        /// </summary>
         public enum FileType
         {
             Word,
@@ -14,6 +18,7 @@ namespace System.IO
             Ppt,
             Pdf
         }
+#if NET45
         /// <summary>
         /// 将文件流转换为指定文件格式
         /// </summary>
@@ -21,7 +26,7 @@ namespace System.IO
         /// <param name="type"></param>
         /// <param name="pathDst"></param>
         /// <returns></returns>
-        public static string Save(this FileStream stream, FileType type, string pathDst)
+        public static async Task<string> SaveAsync(this FileStream stream, FileType type, string pathDst)
         {
             pathDst = Path.GetFullPath(pathDst);
             SaveType saveType = GetSaveType(pathDst);
@@ -41,24 +46,13 @@ namespace System.IO
             var html = File.ReadAllText(pathDst);
             html = Text.RegularExpressions.Regex.Replace(html, "(Evaluation Only\\. Created with Aspose\\.(.+?)\\. Copyright \\d+-\\d+ Aspose Pty Ltd\\.)|(This document was truncated here because it was created in the Evaluation Mode\\.)", "");
             File.WriteAllText(pathDst, html);
+            await Task.FromResult(1);
             return pathDst;
         }
 
-        private enum SaveType
-        {
-            Html = 50 // Words[Checked]
-        }
 
-        private static SaveType GetSaveType(string pathDst)
-        {
-            switch (Path.GetExtension(pathDst))
-            {
-                case ".html":
-                    return SaveType.Html;
-                default:
-                    throw new Exception("Sinx: 不支持的保存类型");
-            }
-        }
+
+        
 
         //public enum ConvertModel
         //{
@@ -160,6 +154,62 @@ namespace System.IO
         //    return model == ConvertModel.SingleDir ? System.IO.Path.GetDirectoryName(dirDst) : dirSrc;
         //}
 #else
+        /// <summary>
+        /// 将文件流转换为指定文件格式
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="type"></param>
+        /// <param name="pathDst"></param>
+        /// <returns></returns>
+        public static async Task<string> SaveAsync(this FileStream stream, FileType type, string pathDst)
+        {
+            switch (type)
+            {
+                case FileType.Word:
+                    var projectRoot = Directory.GetCurrentDirectory()+@"\..\..\..";
+                    var wordToHtmlExe = $@"WordToHtml\Sinx.Utility.Console.exe";
+                    var wordToHtmlExePath = DirectoryEx.GetFiles(projectRoot).FirstOrDefault(f => f.Contains(wordToHtmlExe));
+                    var tempFilePath = $@"{Path.GetDirectoryName(wordToHtmlExePath)}\temp\{DateTime.Now.Ticks}.temp";
+                    Directory.CreateDirectory(Path.GetDirectoryName(tempFilePath));
+                    using (var fs = new FileStream(tempFilePath, FileMode.OpenOrCreate))
+                    {
+                        var buffer = new byte[stream.Length];
+                        await stream.ReadAsync(buffer, 0, buffer.Length);
+                        await fs.WriteAsync(buffer, 0, buffer.Length);
+                    }
+                    var p = Process.Start(wordToHtmlExePath, $"\"{tempFilePath}\" \"{pathDst}\"");
+                    p.WaitForExit();
+                    File.Delete(tempFilePath);
+                    if (p.ExitCode != 0)
+                    {
+                        throw new Exception("Sinx: cmd转换文件失败");
+                    }
+                    break;
+                case FileType.Excel:
+                case FileType.Ppt:
+                case FileType.Pdf:
+                default:
+                    throw new Exception("Sinx: 暂不支持的文件类型");
+            }
+            return pathDst;
+        }
+
+
 #endif
+        private enum SaveType
+        {
+            Html = 50 // Words[Checked]
+        }
+
+        private static SaveType GetSaveType(string pathDst)
+        {
+            switch (Path.GetExtension(pathDst))
+            {
+                case ".html":
+                    return SaveType.Html;
+                default:
+                    throw new Exception("Sinx: 不支持的保存类型");
+            }
+        }
     }
 }
