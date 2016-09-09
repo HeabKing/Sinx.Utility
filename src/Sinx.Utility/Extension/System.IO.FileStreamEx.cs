@@ -1,8 +1,4 @@
-﻿using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Text.RegularExpressions;
-
+﻿using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace System.IO
 {
@@ -18,7 +14,7 @@ namespace System.IO
             Ppt,
             Pdf
         }
-#if NET45
+#if NET451
         /// <summary>
         /// 将文件流转换为指定文件格式
         /// </summary>
@@ -154,46 +150,6 @@ namespace System.IO
         //    return model == ConvertModel.SingleDir ? System.IO.Path.GetDirectoryName(dirDst) : dirSrc;
         //}
 #else
-        /// <summary>
-        /// 将文件流转换为指定文件格式
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="type"></param>
-        /// <param name="pathDst"></param>
-        /// <returns></returns>
-        public static async Task<string> SaveAsync(this FileStream stream, FileType type, string pathDst)
-        {
-            switch (type)
-            {
-                case FileType.Word:
-                    var projectRoot = Directory.GetCurrentDirectory()+@"\..\..\..";
-                    var wordToHtmlExe = $@"WordToHtml\Sinx.Utility.Console.exe";
-                    var wordToHtmlExePath = DirectoryEx.GetFiles(projectRoot).FirstOrDefault(f => f.Contains(wordToHtmlExe));
-                    var tempFilePath = $@"{Path.GetDirectoryName(wordToHtmlExePath)}\temp\{DateTime.Now.Ticks}.temp";
-                    Directory.CreateDirectory(Path.GetDirectoryName(tempFilePath));
-                    using (var fs = new FileStream(tempFilePath, FileMode.OpenOrCreate))
-                    {
-                        var buffer = new byte[stream.Length];
-                        await stream.ReadAsync(buffer, 0, buffer.Length);
-                        await fs.WriteAsync(buffer, 0, buffer.Length);
-                    }
-                    var p = Process.Start(wordToHtmlExePath, $"\"{tempFilePath}\" \"{pathDst}\"");
-                    p.WaitForExit();
-                    File.Delete(tempFilePath);
-                    if (p.ExitCode != 0)
-                    {
-                        throw new Exception("Sinx: cmd转换文件失败");
-                    }
-                    break;
-                case FileType.Excel:
-                case FileType.Ppt:
-                case FileType.Pdf:
-                default:
-                    throw new Exception("Sinx: 暂不支持的文件类型");
-            }
-            return pathDst;
-        }
-
 
 #endif
         private enum SaveType

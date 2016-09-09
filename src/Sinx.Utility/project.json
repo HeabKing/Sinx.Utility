@@ -11,7 +11,7 @@
         "System.Diagnostics.Process": "4.1.0"
       }
     },
-    "net45": {
+    "net451": {
       "dependencies": {
         "Aspose.Words": "16.7.0"
       }
