@@ -2,18 +2,21 @@
   "version": "1.0.0-*",
 
   "dependencies": {
+    
   },
 
   "frameworks": {
     "netstandard1.4": {
       "dependencies": {
         "NETStandard.Library": "1.6.0",
-        "System.Diagnostics.Process": "4.1.0"
+        "System.Diagnostics.Process": "4.1.0",
+        "System.Net.Http": "4.1.0"
       }
     },
     "net451": {
       "dependencies": {
-        "Aspose.Words": "16.7.0"
+        "Aspose.Words": "16.7.0",
+        "System.Net.Http": "4.0.0"
       }
     }
   }
