@@ -1,12 +1,12 @@
 {
   "version": "1.0.0-*",
 
-  "dependencies": {
-  },
+	"dependencies": {
+		"Newtonsoft.Json": "9.0.1"
+	},
 
   "frameworks": {
     "netstandard1.4": {
-      "imports": "portable-net40+sl5+win8+wp8+wpa81",
       "dependencies": {
         "NETStandard.Library": "1.6.0",
         "System.Diagnostics.Process": "4.1.0",
