@@ -3,11 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sinx.Utility.Extension
+namespace System.Net.Mail
 {
     public static class SmtpClientEx
     {

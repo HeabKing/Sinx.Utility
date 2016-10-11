@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Mail;
 using Sinx.Utility.Extension;
 using Xunit;
 

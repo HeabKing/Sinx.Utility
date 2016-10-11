@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Sinx.Utility.Extension;
 
-namespace Sinx.Utility.Extension
+// ReSharper disable once CheckNamespace
+namespace System.Net.Http
 {
     public static class HttpRequestMessageEx
     {
