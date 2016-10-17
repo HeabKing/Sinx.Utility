@@ -23,7 +23,7 @@ namespace System.Net.Http
             var splitLine = Regex.Split(reqRaw.Trim(), Environment.NewLine).Select(m => m.Trim()).ToList();
             #region 1. 解析请求行
             // 1. 解析请求行
-            var requestLine = Regex.Split(splitLine.FirstOrDefault() ?? "", "\\s");
+            var requestLine = Regex.Split(splitLine.FirstOrDefault() ?? "", "\\s+");
             if (requestLine.Count() != 3 ||
                 !RegexEx.IsUrl(requestLine[1]) ||
                 !Regex.IsMatch(requestLine[2].ToLower(), @"http/\d+\.\d+"))
