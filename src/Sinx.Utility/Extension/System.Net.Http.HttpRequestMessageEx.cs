@@ -17,6 +17,7 @@ namespace System.Net.Http
 		/// <param name="request">用于表示拓展方法的this</param>
 		/// <param name="reqRaw">原始Http请求字符</param>
 		/// <returns></returns>
+        // ReSharper disable once MemberCanBePrivate.Global
 		public static HttpRequestMessage CreateFromRaw(this HttpRequestMessage request, string reqRaw)
         {
             // 解析reqRaw
