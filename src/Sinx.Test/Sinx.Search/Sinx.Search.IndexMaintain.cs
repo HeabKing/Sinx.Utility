@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Dapper;
 using Xunit;
 using System.Reflection;
+using Newtonsoft.Json;
 
 namespace Sinx.Test.Sinx.Search
 {
@@ -70,19 +72,17 @@ namespace Sinx.Test.Sinx.Search
 		public void IndexMaintain()
 		{
 			dynamic zConment = _db.QueryAsync($"SELECT * FROM {_tableName}").Result.First();
-			var properties = zConment.GetType().GetTypeInfo().GetProperties();
-			IList<string> models = new List<string>();
-			foreach (var property in properties)
+			var requestEntity = new ExpandoObject() as IDictionary<string, object>;
+			foreach (var property in zConment)
 			{
-				if (_tblNameValues.Any(nv => nv.Name = property.Name))
+				if (_tblNameValues.Any(nv => nv.Name == property.Key))
 				{
-					models.Add($"{property.Name}:{property.GetValue(zConment)}");
+					requestEntity.Add(property.Key, property.Value);
 				}
 			}
-			var modelString = string.Join(",", models);
 			var request = new HttpRequestMessage(HttpMethod.Post, $"/{_indexName}")
 			{
-				Content = new StringContent("{" + modelString + "}")
+				Content = new StringContent(JsonConvert.SerializeObject(requestEntity))
 			};
 			var response = _client.SendAsync(request).Result;
 			var resContent = response.Content.ReadAsStringAsync().Result;
