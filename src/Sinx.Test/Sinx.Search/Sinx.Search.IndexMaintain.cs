@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -54,18 +55,44 @@ namespace Sinx.Test.Sinx.Search
 			// 创建ES索引连接
 			var request = new HttpRequestMessage(HttpMethod.Post, $"/{_indexName}");
 			// 添加映射报文体
-			string mappingStr = "{'settings':{'similarity':{'_bm25':{'type':'BM25','b':0}},'mappings':{'@IndexName':{'properties':{@Mappings}}}}}";
-			var mappingsFromConfig = _configuration.GetSection("Es").GetSection("Mappings").GetChildren();
-			var mappings = from mfc in mappingsFromConfig
-						   let nv = _tblNameValues.FirstOrDefault(m => m.Type == mfc.Key)
-						   where nv != null
-						   select $"'{nv.Name}':{{'type':'{mfc.Value}'}}";
-			string body = mappingStr.Replace("@IndexName", _indexName).Replace("@Mappings", string.Join(",", mappings)).Replace("'", "\"");
+			string mappingStr = "{'settings':{'similarity':{'_bm25':{'type':'BM25','b':0}},'mappings':{'@IndexName':{'properties':@Mappings}}}}";
+			var mappingsFromConfig = _configuration.GetSection("Es").GetSection("DbToEsTypeMappings").GetChildren();
+
+			string body = mappingStr.Replace("@IndexName", _indexName)
+							.Replace("@Mappings", GetEsSettingsMappingsPropertyes(mappingsFromConfig))
+							.Replace("'", "\"");
 			request.Content = new StringContent(body);
 			// 进行连接
 			var response = _client.SendAsync(request).Result;
 			var content = response.Content.ReadAsStringAsync().Result;
 			Assert.True(Regex.IsMatch(content, "true"));
+		}
+
+		/// <summary>
+		/// ES属性类型映射的配置Json
+		/// </summary>
+		/// <param name="sections"></param>
+		/// <returns></returns>
+		private string GetEsSettingsMappingsPropertyes(IEnumerable<IConfigurationSection> sections)
+		{
+			var mappings = from mfc in sections
+						   let nv = _tblNameValues.FirstOrDefault(m => m.Type == mfc.Key)
+						   where nv != null
+						   select $"\"{nv.Name}\":{{\"type\":\"{mfc.Value}\"}}";
+			return $"{string.Join(",", mappings)}";
+		}
+
+		/// <summary>
+		/// 从配置中寻找ES节点并寻找节点下的相关配置
+		/// </summary>
+		/// <param name="config"></param>
+		/// <returns></returns>
+		private dynamic GetEsSettings(IConfiguration config)
+		{
+			IConfigurationSection es = config.GetSection("Es");
+			IConfigurationSection esSettings = es.GetSection("settings");
+			IConfigurationSection esSettingsMappings = es.GetSection("mappings");
+			return null;
 		}
 
 		[Fact]
@@ -80,13 +107,15 @@ namespace Sinx.Test.Sinx.Search
 					requestEntity.Add(property.Key, property.Value);
 				}
 			}
-			var request = new HttpRequestMessage(HttpMethod.Post, $"/{_indexName}")
+			var jsonBody = JsonConvert.SerializeObject(requestEntity);
+			var request = new HttpRequestMessage(HttpMethod.Post, $"/{_indexName}/{_indexName}")
 			{
-				Content = new StringContent(JsonConvert.SerializeObject(requestEntity))
+				Content = new StringContent(jsonBody)
 			};
 			var response = _client.SendAsync(request).Result;
 			var resContent = response.Content.ReadAsStringAsync().Result;
 			Assert.True(Regex.IsMatch(resContent, ""));
+			Assert.True(response.StatusCode == HttpStatusCode.Created);
 		}
 	}
 }
