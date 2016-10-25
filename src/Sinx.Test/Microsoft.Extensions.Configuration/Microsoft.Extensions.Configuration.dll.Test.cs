@@ -47,26 +47,40 @@ namespace Sinx.Test
 			Func<IConfigurationBuilder, string, string> getSectionJson = (cb, key) =>
 			{
 				var configText = File.ReadAllText(((
-							configurationBuilder as ConfigurationBuilder)?
-						.Sources.First() as Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
-					?.Path);
-				IEnumerable<dynamic> dynamicConfig = JsonConvert.DeserializeObject(configText) as IEnumerable<dynamic>;
+						cb as ConfigurationBuilder)?
+					.Sources.First() as Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
+				?.Path);
+				// 去除注释
+				configText = Regex.Replace(configText, @"//[^""]+?" + Environment.NewLine, Environment.NewLine);
 				var keys = key.Split(':');
 				string jsonResult = null;
-				for (var i = 0; i < keys.Length; i++)
+
+				try
 				{
-					var i1 = i;
-					var enumerable = dynamicConfig as dynamic[] ?? dynamicConfig.ToArray();
-					dynamicConfig = enumerable.FirstOrDefault(m => m.Name.ToLower() == keys[i1].ToLower()).Value as IEnumerable<dynamic>;
-					if (i == keys.Length - 1)
+					var children = (JsonConvert.DeserializeObject(configText) as IEnumerable<dynamic>)?.ToList() ?? new List<dynamic>();
+					for (var i = 0; i < keys.Length; i++)
 					{
-						jsonResult = enumerable?.FirstOrDefault()?.Value.ToString();
+						var i1 = i;
+						var section = children.FirstOrDefault(m => m.Name.ToLower() == keys[i1].ToLower());
+						children = (section.Value as IEnumerable<dynamic>).ToList();
+						if (i == keys.Length - 1)
+						{
+							jsonResult = section?.Value?.ToString();
+						}
 					}
+				}
+				catch (Exception e)
+				{
+					throw new ArgumentException($"未能找到指定路径: {key} {Environment.NewLine} {e}");
+				}
+				if (jsonResult == null)
+				{
+					throw new ArgumentException($"未能找到指定路径: {key} {Environment.NewLine}");
 				}
 				return jsonResult;
 			};
-			var rawJson = getSectionJson(configurationBuilder, "Es:DbToEsMapSettings:settings");
-			Assert.True(Regex.IsMatch(Regex.Replace(rawJson, @"\s", ""), @"{""similarity"":{""_bm25"":{""type"":""BM25"",""b"":0}}}", RegexOptions.IgnorePatternWhitespace));
+			var rawJson = getSectionJson(configurationBuilder, "Es:DbToEsMapSettings:settings:similarity");
+			Assert.True(Regex.IsMatch(Regex.Replace(rawJson, @"\s", ""), @"{""_bm25"":{""type"":""BM25"",""b"":0}}", RegexOptions.IgnorePatternWhitespace));
 		}
 	}
 }
