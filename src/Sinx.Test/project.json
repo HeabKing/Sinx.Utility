@@ -14,17 +14,26 @@
 		"Dapper": "1.50.2",
 		"Newtonsoft.Json": "9.0.1"
 	},
-	"frameworks": {
+	"frameworks": { // 使用的框架列表
 		"netcoreapp1.0": {
 			"dependencies": {
 				"Microsoft.NETCore.App": {
 					"type": "platform",
 					"version": "1.0.0"
 				}
-			}
+			},
+			"imports": [] // 引入 frameworks 中不包含的包/库(限TFMs), 包含传统的框架会有风险而不是引用的时候出错, 因为同一个应用使用了不同的框架, 其实import只是为了将.net core preview平滑的过渡到.net Standard和.net core rtm
 		}
 		//"net451": { // 最低net451, 如果net45会无法引用dotnet-test-xunit, 这里有两个框架, 但是控制台是xUnit自动运行的, 这就意味着选用那个框架是xUnit来的, 所以, 如果有两个框架还是分建两个单元测试项目吧
 		//	"dependencies": {}
 		//}
 	}
+	//"runtimes": {
+	//	"win10-arm": {},
+	//	"win10-arm-aot": {},
+	//	"win10-x86": {},
+	//	"win10-x86-aot": {},
+	//	"win10-x64": {},
+	//	"win10-x64-aot": {}
+	//}
 }
