@@ -43,13 +43,22 @@ namespace Sinx.Test
 			Assert.True(config.GetSection("NonSection").Value == null); // IConfigurationSection.Value == null
 			Assert.True(config.GetSection("NonSection").GetChildren().Any() == false);
 
+			// 使用 - 数组
+			Assert.Null(config["Es:Table:SearchedFileds"]); // get null string but want array
+			Assert.Null(config.GetSection("Es").GetSection("Table").GetSection("SearchedFileds").Value);
+			Assert.True(config.GetSection("Es").GetSection("Table").GetSection("SearchedFileds").GetChildren().First().Value != null);
+
 			// 获取指定节点下的 raw json
 			Func<IConfigurationBuilder, string, string> getSectionJson = (cb, key) =>
 			{
-				var configText = File.ReadAllText(((
-						cb as ConfigurationBuilder)?
-					.Sources.First() as Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
-				?.Path);
+				var path = ((cb as ConfigurationBuilder)
+					?.Sources.First() as Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
+				?.Path;
+				if (path == null)
+				{
+					throw new ArgumentException(nameof(cb) + " 无法获取配置文件路径");
+				}
+				var configText = File.ReadAllText(path);
 				// 去除注释
 				configText = Regex.Replace(configText, @"//[^""]+?" + Environment.NewLine, Environment.NewLine);
 				var keys = key.Split(':');
@@ -61,8 +70,8 @@ namespace Sinx.Test
 					for (var i = 0; i < keys.Length; i++)
 					{
 						var i1 = i;
-						var section = children.FirstOrDefault(m => m.Name.ToLower() == keys[i1].ToLower());
-						children = (section.Value as IEnumerable<dynamic>).ToList();
+						var section = children?.FirstOrDefault(m => m.Name.ToLower() == keys[i1].ToLower());
+						children = (section?.Value as IEnumerable<dynamic>)?.ToList();
 						if (i == keys.Length - 1)
 						{
 							jsonResult = section?.Value?.ToString();

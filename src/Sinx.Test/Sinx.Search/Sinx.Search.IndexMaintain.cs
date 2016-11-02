@@ -52,7 +52,7 @@ namespace Sinx.Test.Sinx.Search
 			}
 		}
 		/// <summary>
-		/// 首次索引维护 - 创建索引表
+		/// 创建索引表
 		/// </summary>
 		[Fact]
 		public void CreateIndex()
@@ -89,7 +89,7 @@ namespace Sinx.Test.Sinx.Search
 		}
 
 		/// <summary>
-		/// 索引维护
+		/// 索引表数据写入
 		/// </summary>
 		[Fact]
 		public void IndexMaintain()
@@ -128,10 +128,14 @@ namespace Sinx.Test.Sinx.Search
 		/// <returns></returns>
 		public static string GetJson(this IConfigurationBuilder cb, string key)
 		{
-			var configText = File.ReadAllText(((
-						cb as ConfigurationBuilder)?
-					.Sources.First() as Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
-				?.Path);
+			var path = ((cb as ConfigurationBuilder)
+					?.Sources.First() as Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
+				?.Path;
+			if (path == null)
+			{
+				throw new ArgumentException(nameof(cb) + " 无法获取配置文件路径");
+			}
+			var configText = File.ReadAllText(path);
 			// 去除注释
 			configText = Regex.Replace(configText, @"//[^""]+?" + Environment.NewLine, Environment.NewLine);
 			var keys = key.Split(':');
@@ -143,8 +147,8 @@ namespace Sinx.Test.Sinx.Search
 				for (var i = 0; i < keys.Length; i++)
 				{
 					var i1 = i;
-					var section = children.FirstOrDefault(m => m.Name.ToLower() == keys[i1].ToLower());
-					children = (section.Value as IEnumerable<dynamic>).ToList();
+					var section = children?.FirstOrDefault(m => m.Name.ToLower() == keys[i1].ToLower());
+					children = (section?.Value as IEnumerable<dynamic>)?.ToList();
 					if (i == keys.Length - 1)
 					{
 						jsonResult = section?.Value?.ToString();
