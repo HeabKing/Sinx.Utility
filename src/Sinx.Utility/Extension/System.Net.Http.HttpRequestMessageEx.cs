@@ -82,7 +82,7 @@ namespace System.Net.Http
 				removeOk = false;
 				try
 				{
-					request.Content.Headers.Remove(key + " : " + keyvalue);
+					request.Content.Headers.Remove(key);
 					removeOk = true;
 				}
 				catch (Exception)
@@ -91,7 +91,7 @@ namespace System.Net.Http
 				}
 				if (!removeOk || !request.Content.Headers.TryAddWithoutValidation(key, value))
 				{
-					throw new ArgumentException(nameof(key));
+					throw new ArgumentException(key);
 				}
 			}
 			return request;
