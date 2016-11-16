@@ -22,37 +22,57 @@ namespace Sinx.Utility.Extension
 				.TrimEnd(',');
 
 	    /// <summary>
-	    /// 获取指定条件下的数据集合
+	    /// 获取指定条件下的数据集合(按主键进行排序)
 	    /// </summary>
 	    /// <param name="db">IDbConnection</param>
 	    /// <param name="model">指定条件</param>
 	    /// <param name="defaultFields">按照默认值查询的字段</param>
+	    /// <param name="index">页位置[0, +)</param>
+	    /// <param name="size">页大小</param>
 	    /// <returns>没有值返回空集合</returns>
 	    // ReSharper disable once MemberCanBePrivate.Global
-	    public static Task<IEnumerable<T>> GetAsync<T>(this IDbConnection db, T model, params string[] defaultFields)
-		{
-			var fileds = model.GetAssignedProperties().ToList();
-			fileds.AddRange(defaultFields.Select(item => new KeyValuePair<string, object>(item, typeof(T).GetTypeInfo().GetDeclaredProperty(item).GetValue(model))));
-			if (!fileds.Any())
-			{
-				throw new ArgumentException("请输入最少一个查询条件");
-			}
-			// TODO Can here nameof(T)?
-			var sql = $@"
+	    public static Task<IEnumerable<T>> GetAsync<T>(this IDbConnection db, T model, int? index, int? size, params string[] defaultFields) where T : class
+	    {
+		    var fileds = model.GetAssignedProperties().ToList();
+		    fileds.AddRange(
+			    defaultFields.Select(
+				    item => new KeyValuePair<string, object>(item, typeof(T).GetTypeInfo().GetDeclaredProperty(item).GetValue(model))));
+
+		    // TODO Can here nameof(T)?
+		    var sql = (index == null || size == null) ? $@"
 				SELECT *
 				FROM {typeof(T).Name}
-				WHERE 1 = 1";
-			sql = fileds.Aggregate(sql, (c, i) => c + $" AND {i.Key} = @{i.Key} ");
+				WHERE 1 = 1 @wheres" : $@"
+				SELECT * 
+				FROM (
+					SELECT *, ROW_NUMBER() OVER(ORDER BY Id) AS RowNum 
+					FROM dbo.TblUser
+					WHERE 1 = 1 @wheres) AS T 
+				WHERE T.RowNum BETWEEN {index * size + 1} AND {size}";	// TODO dependency primary key is "Id"
+			var wheres = fileds.Aggregate("", (c, i) => c + $" AND {i.Key} = @{i.Key} ");
+			sql = sql.Replace("@wheres", wheres);
 			return db.QueryAsync<T>(sql, model);
 		}
 
 		/// <summary>
+		/// 获取指定条件下的数据集合
+		/// </summary>
+		/// <param name="db">IDbConnection</param>
+		/// <param name="model">指定条件</param>
+		/// <param name="defaultFields">按照默认值查询的字段</param>
+		/// <returns>没有值返回空集合</returns>
+		public static Task<IEnumerable<T>> GetAsync<T>(this IDbConnection db, T model, params string [] defaultFields) where T : class
+	    {
+		    return db.GetAsync(model, null, null, defaultFields);
+	    }
+
+	    /// <summary>
 		/// 根据Id查询实体
 		/// </summary>
 		/// <param name="db">IDbConnection</param>
 		/// <param name="id">Id条件</param>
 		/// <returns></returns>
-		public static async Task<T> GetAsync<T>(this IDbConnection db, int id)
+		public static async Task<T> GetAsync<T>(this IDbConnection db, int id) where T : class
 		{
 			var idInfo = typeof(T).GetTypeInfo().GetDeclaredProperty("Id");
 			if (idInfo == null)
