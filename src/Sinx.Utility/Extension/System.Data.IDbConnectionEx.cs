@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Dapper;
 
-namespace Sinx.Utility.Extension
+// ReSharper disable once CheckNamespace
+namespace System.Data
 {
 	/// <summary>
 	/// 基于Dapper给IDbConnection提供拓展, 支持实体下的基本增删改查
@@ -174,7 +173,7 @@ namespace Sinx.Utility.Extension
 		/// <param name="db"></param>
 		/// <param name="where"></param>
 		/// <returns></returns>
-		public static Task<int> DeleteAsync<T>(IDbConnection db, T where) where T : class
+		public static Task<int> DeleteAsync<T>(this IDbConnection db, T where) where T : class
 		{
 			var assignedPropertyKeys = where.GetAssignedProperties().Select(m => m.Key);
 			string sql = $@"DELETE FROM {typeof(T).Name} WHERE {TempDelegate(assignedPropertyKeys, null)}";
