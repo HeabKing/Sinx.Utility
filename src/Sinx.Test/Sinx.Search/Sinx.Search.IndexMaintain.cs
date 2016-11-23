@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Dapper;
 using Xunit;
 using System.Reflection;
+using Microsoft.Extensions.Configuration.Json;
 using Newtonsoft.Json;
 
 namespace Sinx.Test.Sinx.Search
@@ -129,7 +130,7 @@ namespace Sinx.Test.Sinx.Search
 		public static string GetJson(this IConfigurationBuilder cb, string key)
 		{
 			var path = ((cb as ConfigurationBuilder)
-					?.Sources.First() as Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
+					?.Sources.First() as JsonConfigurationSource)
 				?.Path;
 			if (path == null)
 			{

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -52,7 +53,7 @@ namespace Sinx.Test
 			Func<IConfigurationBuilder, string, string> getSectionJson = (cb, key) =>
 			{
 				var path = ((cb as ConfigurationBuilder)
-					?.Sources.First() as Microsoft.Extensions.Configuration.Json.JsonConfigurationSource)
+					?.Sources.First() as JsonConfigurationSource)
 				?.Path;
 				if (path == null)
 				{

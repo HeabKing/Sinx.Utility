@@ -36,7 +36,7 @@ namespace Sinx.Utility.Test
 			Assert.Equal(models2.Count, models2Temp.Count);
 			Assert.True(models2.All(m => models2Temp.Any(o => o.Id == m.Id)));
 		}
-
+		
 
 		private class TblUser
 		{
