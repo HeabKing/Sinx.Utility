@@ -13,13 +13,29 @@ namespace Sinx.Test
 {
 	public class ReflectionTest
 	{
+		#region System.Reflection.Assembly
+
+		// ReSharper disable once MemberCanBePrivate.Global
+		public string GetAssemblyAndCreateAnObjectTestMessage => "CreateInstanceSuccessfully";
+		[Fact]
+		public void GetAssemblyAndCreateAnObjectTest()
+		{
+			var ass = typeof(ReflectionTest).GetTypeInfo().Assembly;
+			var types = ass.ExportedTypes;
+			var targetType = types.Single(t => t.Name == nameof(ReflectionTest));
+			var targetObj = Activator.CreateInstance(targetType) as ReflectionTest;
+			Assert.Equal(targetObj?.GetAssemblyAndCreateAnObjectTestMessage, GetAssemblyAndCreateAnObjectTestMessage);
+		}
+
+		#endregion
+
 		#region 2016-10-17 System.Reflection.Emit
 		// TODO http://stackoverflow.com/a/3862241
 
-			[Fact]
+		[Fact]
 		public void CreateRuntimeClassInstanceTest()
 		{
-			var dic = new Dictionary<string, Type> {{"Id", typeof(int)}};
+			var dic = new Dictionary<string, Type> { { "Id", typeof(int) } };
 			var ins = MyTypeBuilder.CreateNewObject(dic);
 			Assert.True(ins.GetType().GetTypeInfo().GetProperty("Id") != null);
 		}
@@ -106,14 +122,14 @@ namespace Sinx.Test
 			#region 根据程序集成员获取程序集名字, 路径等相关信息
 
 			var factAttribute = typeof(FactAttribute);
-			var assembly = factAttribute.GetTypeInfo().Assembly;	// 获取程序集
-			// Name 程序集名字
+			var assembly = factAttribute.GetTypeInfo().Assembly;    // 获取程序集
+																	// Name 程序集名字
 			Assert.True(Regex.IsMatch(assembly.FullName, "xunit.core, Version=[^,]+, Culture=[^,]+, PublicKeyToken=.+"));
-			Assert.True(assembly.GetName().Name == "xunit.core"); 
+			Assert.True(assembly.GetName().Name == "xunit.core");
 			// 路径
 			Assert.True(assembly.Location.Contains(@"\.nuget\packages\xunit.extensibility.core\2.2.0-beta2-build3300\lib\netstandard1.0\xunit.core.dll"));
 			// 某个类
-			var factType = assembly.DefinedTypes.FirstOrDefault(c => c.Name == nameof(FactAttribute));	// 类型集合
+			var factType = assembly.DefinedTypes.FirstOrDefault(c => c.Name == nameof(FactAttribute));  // 类型集合
 			Assert.True(factType != null);
 
 			#endregion
